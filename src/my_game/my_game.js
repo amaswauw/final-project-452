@@ -74,13 +74,13 @@ class MyGame extends engine.Scene {
 
         // Objects in the scene
         this.mHero = new Hero(this.kMinionSprite);
-        this.mPortal = new TextureObject(this.kMinionPortal, 50, 30, 10, 10);
+        this.mPortal = new TextureObject(this.kMinionPortal, 50, 20, 10, 10);
 
         this.mProjectileT = new Projectile(this.kBeam2, Infinity, this.kT, 500, 10);
         this.mProjectileT.getXform().setSize(10, 8);
-        this.mProjectileT.getXform().setPosition(10, 10);
+        this.mProjectileT.getXform().setPosition(20, 20);
        // this.mProjectileT.setTracking(vec2.fromValues(0, 0), null, null, 0.1, 0)
-       this.mProjectileT.setTracking(this.mPortal, Math.PI/2, 0.01, 0)
+       this.mProjectileT.setTracking(this.mPortal, Math.PI/2, 0.1, 0)
     }
 
     _drawCamera(camera) {

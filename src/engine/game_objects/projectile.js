@@ -113,7 +113,7 @@ class Projectile extends engine.GameObject {
     if (target instanceof GameObject) {
       this.pathType = "tracking"
       this.target = target;
-      this.mCurrentFrontDir = vec2.fromValues(this.getXform().getXPos()+this.getXform().getWidth(), this.getXform().getYPos() + this.getXform().getHeight()/2)
+     this.mCurrentFrontDir = vec2.fromValues(1,1)
     } else {
       this.pathType = "mouse tracking"
       console.log()
@@ -170,6 +170,7 @@ class Projectile extends engine.GameObject {
     
     this.mSpeed += this.acceleration;
     if (this.pathType == "tracking") {
+      // console.log(this.target);
       let desiredPoint = vec2.fromValues(this.target.getXform().getPosition()[0], this.target.getXform().getPosition()[1]);
       desiredPoint[0]+=(this.target.getXform().getWidth()/2);
       desiredPoint[1]+=(this.target.getXform().getHeight()/2);
@@ -183,23 +184,24 @@ class Projectile extends engine.GameObject {
       let fAngle = Math.atan(centeredFront[1]/centeredFront[0])
       let pAngle = Math.atan(centeredDesiredPoint[1]/centeredDesiredPoint[0])
       //console.log(fAngle/Math.PI*180, pAngle/Math.PI*180)
-      let deltaRad =  Math.round((pAngle - fAngle + Math.PI/4)* 180 / Math.PI)
-     
-      if (this.target.getXform().getXPos() < xf.getXPos()) {
-        deltaRad += 180;
+      let unitDegree =  Math.round((pAngle - fAngle )* 180 / Math.PI)
+      unitDegree+=45
+      if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] >= xf.getCenterPos()[1]) {
+        console.log("first check")
+        unitDegree = (180 + unitDegree);
       }
-      //vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), deltaRad);
-     // this.getXform().incRotationByRad(deltaRad);
-      // engine.GameObject.prototype.update.call
-      /*
-        this.mBrain.rotateObjPointTo(this.mHero.getXform().getPosition(), 0.01);
-        engine.GameObject.prototype.update.call(this.mBrain);
-      */
-     /*
-     */
-      console.log(deltaRad)
-      this.setCurrentFrontDir(vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), deltaRad * Math.PI/180))
-      xf.setRotationInDegree(deltaRad);
+      if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] <= xf.getCenterPos()[1]) {
+        console.log("first check")
+        unitDegree = (180 + unitDegree);
+      }
+      if (unitDegree >= 360) {
+        unitDegree -= 360;
+      }
+      let x = Math.cos(unitDegree*Math.PI/180)
+      let y = Math.sin(unitDegree*Math.PI/180)
+      
+      this.setCurrentFrontDir(vec2.fromValues(x,y))
+      xf.setRotationInDegree(unitDegree);
       
     } else if (this.pathType == "mouse tracking") {
       let point = vec2.fromValues(input.getMousePosX(), input.getMousePosY());

@@ -22,6 +22,11 @@ class Transform {
     getYPos() { return this.mPosition[1]; }
     setYPos(yPos) { this.mPosition[1] = yPos; }
     incYPosBy(delta) { this.mPosition[1] += delta; }
+
+
+    getCenterPos(){
+        return vec2.fromValues(this.mPosition[0] + this.mScale[0]/2,this.mPosition[1] + this.mScale[1]/2);
+    }
     
     setSize(width, height) {
         this.setWidth(width);

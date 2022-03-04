@@ -37,6 +37,7 @@ import TextureRenderable from "./renderables/texture_renderable.js";
 import SpriteRenderable from "./renderables/sprite_renderable.js";
 import SpriteAnimateRenderable from "./renderables/sprite_animate_renderable.js";
 import FontRenderable from "./renderables/font_renderable.js";
+import TrailRenderable from "./renderables/trail_renderable.js";
 import { eTexCoordArrayIndex } from "./renderables/sprite_renderable.js";
 import { eAnimationType } from "./renderables/sprite_animate_renderable.js";
 
@@ -91,7 +92,7 @@ export default {
     Camera, Scene, Transform, BoundingBox,  
     
     // Renderables
-    Renderable, TextureRenderable, SpriteRenderable, SpriteAnimateRenderable, FontRenderable,
+    Renderable, TextureRenderable, TrailRenderable, SpriteRenderable, SpriteAnimateRenderable, FontRenderable,
 
     // Game Objects
     GameObject, GameObjectSet,

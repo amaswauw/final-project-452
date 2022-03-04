@@ -128,7 +128,7 @@ class MyGame extends engine.Scene {
             this.mProjectile = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
             this.mProjectile.getXform().setSize(10, 8);
             this.mProjectile.getXform().setPosition(this.mHero.getXform().getXPos() + this.mHero.getXform().getWidth()/2, this.mHero.getXform().getYPos() + this.mHero.getXform().getHeight()/3.8);
-            this.mProjectile.setStraight(null , null, 0, 0.3, 0.01)
+            this.mProjectile.setStraight(null , null, Math.random() * Math.PI * 2, 0.3, 0.01)
             this.mProjectileSet.push(this.mProjectile);
         }
         

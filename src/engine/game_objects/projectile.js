@@ -4,7 +4,6 @@ import GameObject from "./game_object.js";
 import TrailRenderable from "../renderables/trail_renderable.js"
 import TextureRenderable from "../renderables/texture_renderable_main.js";
 import engine from "../../engine/index.js";
-import * as input from "../input.js";
 
 class Projectile extends engine.GameObject {
   constructor(renderable, _lifetime, _trailTexture = null, _trailLifetime = 0, _trailInterval = 1000) {
@@ -13,6 +12,7 @@ class Projectile extends engine.GameObject {
     this.creationTime = performance.now();
     this.acceleration = 0;
     this.mMaxRotation = 0;
+    this.facingDegree = 0;
     this.targetPoint = null;
     this.pathType = "";
 
@@ -24,6 +24,10 @@ class Projectile extends engine.GameObject {
     this.trailTimer = 0;
     this.mValid = true;
     this.trailSize = [];
+    this.bouncingPrototypes = [];
+    this.onSpawnCheck = true;
+    this.mSpeed = 0;
+    this.temp = vec2.fromValues(0, 0);
   }
 
   // Projectile Trail
@@ -44,7 +48,7 @@ class Projectile extends engine.GameObject {
     }
   }
 
-  setTrailSize(x, y)  {
+  setTrailSize(x, y) {
     this.trailSize = [x, y]
   }
 
@@ -58,8 +62,42 @@ class Projectile extends engine.GameObject {
     this.lifetime = lifetime;
   }
 
+  setBouncingPrototypes(gameObjectPrototypes = []) {
+    this.bouncingPrototypes = gameObjectPrototypes;
+  }
+
   // Bounce
-  bounce(gameObjectTypes = []) { }
+  bounce(gameObjectTypes = []) {
+    for (let objtype of this.bouncingPrototypes) {
+      for (let gameObject of GameObject.gameObjectSet) {
+        if (gameObject instanceof objtype) {
+          let h = [];
+          if (this.pixelTouches(gameObject, h)) {
+             this.setCurrentFrontDir(this.reflect(this.getCurrentFrontDir(), vec.normalize(this.temp, this.getCurrentFrontDir())))
+          }
+        } else {
+          let h = [];
+          if (this.pixelTouches(gameObject, h)) {
+            this.onTermination();
+          }
+        }
+      }
+    }
+   }
+
+  reflect(vector, normal) {
+    let reflect = vec2.clone(vector);
+    reflect = vec2.scale(reflect, normal, -2 * vec2.dot(vector, normal));
+    reflect = vec2.add(reflect, reflect, vector);
+    // if (direction === "bottom") {
+    //   reflect[1] = Math.abs(reflect[1])
+    // } else if (direction === "top") {
+    //   if (reflect[1] > 0) {
+    //     reflect[1] = -reflect[1];
+    //   }
+    // }
+    return reflect;
+  }
 
   // Path types
   // supports straight at a target object
@@ -74,17 +112,17 @@ class Projectile extends engine.GameObject {
     if (target instanceof GameObject) {
       let point = target.getXform().getPosition();
 
-      point[0]+=(target.getXform().getWidth()/2);
-      point[1]+=(target.getXform().getHeight()/2);
+      point[0] += (target.getXform().getWidth() / 2);
+      point[1] += (target.getXform().getHeight() / 2);
       this.setCurrentFrontDir(point);
 
-      let rot = Math.atan2(point[1]  + this.getXform().getPosition()[1], point[0] + this.getXform().getPosition()[0]);
+      let rot = Math.atan2(point[1] + this.getXform().getPosition()[1], point[0] + this.getXform().getPosition()[0]);
       this.getXform().setRotationInRad(rot);
     }
     //  if the target point is given
     else if (targetPoint != null) {
       this.setCurrentFrontDir(targetPoint);
-      let rot = Math.atan2(targetPoint[1]  + this.getXform().getPosition()[1], targetPoint[0] + this.getXform().getPosition()[0]);
+      let rot = Math.atan2(targetPoint[1] + this.getXform().getPosition()[1], targetPoint[0] + this.getXform().getPosition()[0]);
       this.getXform().setRotationInRad(rot);
 
     }
@@ -102,9 +140,8 @@ class Projectile extends engine.GameObject {
 
   }
   // supports target object
-  // supports target mouse
-  setTracking(target, maxRotation = 2 * Math.PI, speed = 0, acceleration = 0) {
-    
+  setTracking(target, maxRotation = 360, speed = 0, acceleration = 0) {
+
     this.mSpeed = speed;
     this.acceleration = acceleration;
     this.mMaxRotation = maxRotation;
@@ -113,28 +150,55 @@ class Projectile extends engine.GameObject {
     if (target instanceof GameObject) {
       this.pathType = "tracking"
       this.target = target;
-     this.mCurrentFrontDir = vec2.fromValues(1,1)
-    } else {
-      this.pathType = "mouse tracking"
-      console.log()
+      this.setCurrentFrontDir(vec2.fromValues(1, 0));
     }
-
-
-
-
   }
-  setParabola(target = null, maxPrependicularAmplitude = 0, speed = 0, acceleration = 0) { } // sets path type to be parabolic
-  setParabola(direction = null, speed = 0, forceDirection, forceMagnitude) { }
+
+  // setParabolaT(target = null, maxPrependicularAmplitude = 0, speed = 0, acceleration = 0) {
+  //   this.mSpeed = speed;
+  //   this.acceleration = acceleration;
+  //   if (target instanceof GameObject) {
+  //     this.pathType = "parabolic target";
+  //     this.target = target;
+  //     this.mCurrentFrontDir = vec2.fromValues(1, 1);
+  //   }
+  // } // sets path type to be parabolic
+
+
+  setParabolaD(direction = null, speed = 0, accDirection = [0, -1], accMagnitude = (9.8 / 10000)) {
+    this.mSpeed = speed;
+    this.pathType = "parabolic direction";
+    if (direction) {
+      let x = Math.cos(direction)
+      let y = Math.sin(direction);
+      this.setCurrentFrontDir(vec2.fromValues(x, y));
+    }
+    this.getXform().setRotationInRad(Math.atan(direction[1]/direction[0]));
+    this.accDirection = accDirection;
+    this.accMagnitude = accMagnitude;
+  }
 
   // Behavior effects
-  onSpawn() { } // Called from update() on first update call
-  onTermination() { } // Called from update() on last update call
-  inFlight() { } // Called from update() every call except for last and first
+  onSpawn() {
+    this.mValid = true;
+    this.spawnTrail();
+  } // Called from update() on first update call
 
-  draw(camera)  {
+  onTermination() {
+    this.mValid = false;
+    this.mSpeed = 0;
+    this.acceleration = 0;
+    GameObject.gameObjectSet.removeFromSet(this);
+  } // Called from update() on last update call
+
+  inFlight() {
+    this.spawnTrail();
+  } // Called from update() every call except for last and first
+
+  draw(camera) {
     if (this.mValid) {
-      for (let i = 0; i < this.trailSet.length; i++)  {
-        if (this.trailSet[i].mValid)  {
+      for (let i = 0; i < this.trailSet.length; i++) {
+        if (this.trailSet[i].mValid) {
           this.trailSet[i].draw(camera);
         }
       }
@@ -145,21 +209,26 @@ class Projectile extends engine.GameObject {
   checkObjectLifespan() {
     // loop through to check
     for (let i = 0; i < this.trailSet.length; i++) {
-        if (!this.trailSet[i].mValid) {
-            this.trailSet.splice(i, 1);
-        }
+      if (!this.trailSet[i].mValid) {
+        this.trailSet.splice(i, 1);
+      }
     }
-}
+  }
 
   update() {
     if (performance.now() - this.creationTime > this.lifetime) {
-      this.mValid = false;
+      this.onTermination();
+    }
+    if (this.onSpawnCheck) {
+      this.onSpawn();
+      this.onSpawnCheck = false;
+    } else {
+      this.inFlight();
     }
 
     this.checkObjectLifespan();
 
-    super.update();
-    this.spawnTrail();
+
     let xf = this.getXform();
 
     // update the trails
@@ -167,51 +236,120 @@ class Projectile extends engine.GameObject {
       if (this.trailSet[i].mValid)
         this.trailSet[i].update();
     }
-    
-    this.mSpeed += this.acceleration;
-    if (this.pathType == "tracking") {
-      // console.log(this.target);
-      let desiredPoint = vec2.fromValues(this.target.getXform().getPosition()[0], this.target.getXform().getPosition()[1]);
-      desiredPoint[0]+=(this.target.getXform().getWidth()/2);
-      desiredPoint[1]+=(this.target.getXform().getHeight()/2);
-      let pCenter = vec2.fromValues(xf.getCenterPos()[0],xf.getCenterPos()[1])
-      //console.log(pCenter)
-      let centeredDesiredPoint = vec2.fromValues(desiredPoint[0] - pCenter[0], desiredPoint[1] - pCenter[1]);
-      //console.log(centeredDesiredPoint)
-      let centeredFront = vec2.fromValues(this.mCurrentFrontDir[0] - pCenter[0], this.mCurrentFrontDir[1] - pCenter[1]); 
-      
-      //console.log(xf.getCenterPos(), this.target.getXform().getCenterPos())
-      let fAngle = Math.atan(centeredFront[1]/centeredFront[0])
-      let pAngle = Math.atan(centeredDesiredPoint[1]/centeredDesiredPoint[0])
-      //console.log(fAngle/Math.PI*180, pAngle/Math.PI*180)
-      let unitDegree =  Math.round((pAngle - fAngle )* 180 / Math.PI)
-      unitDegree+=45
-      if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] >= xf.getCenterPos()[1]) {
-        console.log("first check")
-        unitDegree = (180 + unitDegree);
-      }
-      if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] <= xf.getCenterPos()[1]) {
-        console.log("first check")
-        unitDegree = (180 + unitDegree);
-      }
-      if (unitDegree >= 360) {
-        unitDegree -= 360;
-      }
-      let x = Math.cos(unitDegree*Math.PI/180)
-      let y = Math.sin(unitDegree*Math.PI/180)
-      
-      this.setCurrentFrontDir(vec2.fromValues(x,y))
-      xf.setRotationInDegree(unitDegree);
-      
-    } else if (this.pathType == "mouse tracking") {
-      let point = vec2.fromValues(input.getMousePosX(), input.getMousePosY());
-      this.setCurrentFrontDir(point);
 
-      let rot = Math.atan2(point[1]  + this.getXform().getPosition()[1], point[0] + this.getXform().getPosition()[0]);
-      this.getXform().setRotationInRad(rot);
+    this.mSpeed += this.acceleration;
+    if (this.pathType === "tracking") {
+      // // console.log(this.target);
+      // let desiredPoint = vec2.fromValues(this.target.getXform().getPosition()[0], this.target.getXform().getPosition()[1]);
+      // desiredPoint[0]+=(this.target.getXform().getWidth()/2);
+      // desiredPoint[1]+=(this.target.getXform().getHeight()/2);
+      // let pCenter = vec2.fromValues(xf.getCenterPos()[0],xf.getCenterPos()[1])
+      // //console.log(pCenter)
+      // let centeredDesiredPoint = vec2.fromValues(desiredPoint[0] - pCenter[0], desiredPoint[1] - pCenter[1]);
+      // //console.log(centeredDesiredPoint)
+      // let centeredFront = vec2.fromValues(this.mCurrentFrontDir[0] - pCenter[0], this.mCurrentFrontDir[1] - pCenter[1]); 
+      
+      // //console.log(xf.getCenterPos(), this.target.getXform().getCenterPos())
+      // let fAngle = Math.atan(centeredFront[1]/centeredFront[0])
+      // let pAngle = Math.atan(centeredDesiredPoint[1]/centeredDesiredPoint[0])
+      // //console.log(fAngle/Math.PI*180, pAngle/Math.PI*180)
+      // let unitDegree =  Math.round((pAngle - fAngle )* 180 / Math.PI)
+      // unitDegree+=45
+      // if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] >= xf.getCenterPos()[1]) {
+      //   console.log("first check")
+      //   unitDegree = (180 + unitDegree);
+      // }
+      // if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] <= xf.getCenterPos()[1]) {
+      //   console.log("first check")
+      //   unitDegree = (180 + unitDegree);
+      // }
+      // if (unitDegree >= 360) {
+      //   unitDegree -= 360;
+      // }
+      // let x = Math.cos(unitDegree*Math.PI/180)
+      // let y = Math.sin(unitDegree*Math.PI/180)
+      
+      // this.setCurrentFrontDir(vec2.fromValues(x,y))
+      // xf.setRotationInDegree(unitDegree);
+      // console.log(this.target);
+      let desiredPoint = vec2.fromValues(this.target.getXform().getCenterPos()[0], this.target.getXform().getCenterPos()[1]);
+      let pCenter = vec2.fromValues(xf.getCenterPos()[0], xf.getCenterPos()[1])
+      
+     
+      let centeredDesiredPoint = vec2.fromValues(desiredPoint[0] - pCenter[0], desiredPoint[1] - pCenter[1]);
+      
+      let centeredFront = vec2.fromValues((this.mCurrentFrontDir[0] * pCenter[0]), (this.mCurrentFrontDir[1] * pCenter[1]));
+      
+     //console.log(centeredDesiredPoint)
+      //console.log(centeredFront)
+      let projectileAngle = Math.atan(centeredFront[1] / centeredFront[0]) * 180 / Math.PI
+      let targetAngle = Math.atan(centeredDesiredPoint[1] / centeredDesiredPoint[0]) * 180 / Math.PI
+      console.log("t",targetAngle)
+      console.log("p",projectileAngle)
+      let deltaDegree = (projectileAngle - targetAngle)
+
+      deltaDegree = Math.min(Math.abs(deltaDegree), this.mMaxRotation)
+      if (deltaDegree<0.1){
+        deltaDegree=0
+      }
+      console.log("delta degree",deltaDegree)
+
+      //increase current front direction by deltadegree
+      // increase rotation by deltadegree
+      
+      this.facingDegree+=deltaDegree;
+     
+      let x = Math.cos(this.facingDegree * Math.PI / 180)
+      let y = Math.sin(this.facingDegree * Math.PI / 180)
+
+      
+      this.setCurrentFrontDir(vec2.fromValues(x, y))
+      xf.setRotationInDegree(this.facingDegree)
+     
+
+    } else if (this.pathType === "parabolic tracking") {
+    } else if (this.pathType === "parabolic direction") {
+      // console.log(this.getXform().getCenterPos());
+      // Change X position
+      // x = starting position + velocity in the horizontal axis * time
+
+      // Change Y Position
+      // y = starting height + 1 / 2 (starting velocity + current velocity) * time
+
+      //
+      //
+      // step 0.5 or possibly even step 0.5: find the x and y components of the acceleration
+      // accDirection = [0, -1], accMagnitude = (9.8 / 60)
+      // do the trig thing on accDirection to get the rot value
+      // do same thing from step 1
+      let accX = this.accDirection[0] * Math.acos(this.accMagnitude);
+      let accY = this.accDirection[1] * Math.asin(this.accMagnitude);
+
+
+      // step 1: get the direction in radians so technically rotation ig and then yeah
+      // let rot =  this.getxform().getrotatio
+      let rot = this.getXform().getRotationInRad();
+      // console.log(rot);
+
+      // step 2: calculate speed components given current speed acceleration dir and acceleration mag and rot
+      // console.log(this.mSpeed)
+      let speedX = this.mSpeed * Math.cos(rot) + accX;
+      let speedY = this.mSpeed * Math.sin(rot) + accY;
+
+      // console.log(this.mSpeed);
+
+      // step 2.5: update direction
+      let updatedRotation = Math.atan2(speedY, speedX);
+      this.getXform().setRotationInRad(updatedRotation);
+      this.setCurrentFrontDir(vec2.fromValues(speedX, speedY));
+
+      // step 3: find general speed vector, set mSpeed to the newfound speed
+      // console.log(speedX * speedX)
+      this.mSpeed = Math.sqrt(Math.pow(speedX, 2) + Math.pow(speedY, 2));
     }
-  }    // accelerate this.mSpeed
-  // calls spawnTrail()
+    this.bounce(GameObject.gameObjectSet);
+    super.update();
+  }
   // checks collisions -> calls bounce(), onTermination()
   // onSpawn() inFlight(), onTermination() if conditions are met
 }

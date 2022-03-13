@@ -3,7 +3,7 @@
 import TextureRenderable from "./texture_renderable.js";
 
 class TrailRenderable extends TextureRenderable {
-  constructor(renderable, _lifeTime, xform, size = [5, 3]) {
+  constructor(renderable, _lifeTime, xform, size = [2, 1]) {
     super(renderable);
 
     // renderable component

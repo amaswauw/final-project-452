@@ -9,7 +9,7 @@
 import * as map from "./resource_map.js";
 import * as input from "../input.js";
 
-const kUPS = 60; // Updates per second
+const kUPS = 4; // Updates per second
 const kMPF = 1000 / kUPS; // Milliseconds per update.
 
 // Variables for timing gameloop.

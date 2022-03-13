@@ -34,6 +34,7 @@ class MyGame extends engine.Scene {
         this.mProjectileSet = [];
         this.mProjectile = null;
         this.mProjectileT = null;
+        this.mProjectileP = null;
     }
 
     load() {
@@ -77,10 +78,16 @@ class MyGame extends engine.Scene {
         this.mPortal = new TextureObject(this.kMinionPortal, 50, 20, 10, 10);
 
         this.mProjectileT = new Projectile(this.kBeam2, Infinity, this.kT, 500, 10);
-        this.mProjectileT.getXform().setSize(10, 8);
+        this.mProjectileT.getXform().setSize(5, 4);
+        this.mProjectileT.setTrailSize(2, 1);
         this.mProjectileT.getXform().setPosition(20, 20);
-       // this.mProjectileT.setTracking(vec2.fromValues(0, 0), null, null, 0.1, 0)
-       this.mProjectileT.setTracking(this.mPortal, Math.PI/2, 0.1, 0)
+        this.mProjectileT.setTracking(this.mPortal, 360, 0.1, 0)
+
+        this.mProjectileP = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
+        this.mProjectileP.getXform().setSize(5, 4);
+        this.mProjectileP.setTrailSize(2, 1);
+        this.mProjectileP.getXform().setPosition(40, 40);
+        this.mProjectileP.setParabolaD(vec2.fromValues(1, 1), 0.15);
     }
 
     _drawCamera(camera) {
@@ -107,6 +114,7 @@ class MyGame extends engine.Scene {
         }
 
         this.mProjectileT.draw(this.mCamera);
+        this.mProjectileP.draw(this.mCamera);
     }
 
     checkObjectLifespan() {
@@ -125,8 +133,8 @@ class MyGame extends engine.Scene {
         
         // Spawn projectile at hero position
         if (engine.input.isKeyClicked(engine.input.keys.Space)) {
-            this.mProjectile = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
-            this.mProjectile.getXform().setSize(10, 8);
+            this.mProjectile = new Projectile(this.kBeam, 1000, this.kT, 250 , 100);
+            this.mProjectile.getXform().setSize(5, 4);
             this.mProjectile.getXform().setPosition(this.mHero.getXform().getXPos() + this.mHero.getXform().getWidth()/2, this.mHero.getXform().getYPos() + this.mHero.getXform().getHeight()/3.8);
             this.mProjectile.setStraight(null , null, Math.random() * Math.PI * 2, 0.3, 0.01)
             this.mProjectileSet.push(this.mProjectile);
@@ -141,6 +149,7 @@ class MyGame extends engine.Scene {
         // TEST
         //
         this.mProjectileT.update();
+        this.mProjectileP.update();
         //
         // TEST
 

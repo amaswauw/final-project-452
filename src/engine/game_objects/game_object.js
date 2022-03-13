@@ -6,13 +6,16 @@
  */
 "use strict";
 import BoundingBox from "../utils/bounding_box.js";
+import GameObjectSet from "./game_object_set.js";
 
 class GameObject {
+    static gameObjectSet = new GameObjectSet();
     constructor(renderable) {
         this.mRenderComponent = renderable;
         this.mVisible = true;
         this.mCurrentFrontDir = vec2.fromValues(0, 1);  // this is the current front direction of the object
         this.mSpeed = 0;
+        GameObject.gameObjectSet.addToSet(this);
     }
 
     getXform() { return this.mRenderComponent.getXform(); }

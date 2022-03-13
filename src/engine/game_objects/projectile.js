@@ -284,12 +284,13 @@ class Projectile extends engine.GameObject {
     
       let projectileAngle = Math.atan(centeredFront[1]/ centeredFront[0]) * 180 / Math.PI
       let targetAngle = Math.atan(centeredDesiredPoint[1]/centeredDesiredPoint[0]) * 180 / Math.PI
-      //console.log("t",targetAngle)
+    
       // fix the quadrant problem of atan
       //quadrant 2
       if(centeredDesiredPoint[0]<0){
         targetAngle+=180
-      }else if(centeredDesiredPoint[1]<0){
+      }// quadrant 4
+      else if(centeredDesiredPoint[1]<0){
         targetAngle+=360
       }
       if(centeredFront[0]<0){
@@ -298,10 +299,19 @@ class Projectile extends engine.GameObject {
         projectileAngle+=360
       }
      
-      console.log("fixed t",targetAngle)
-      console.log("fixed p",projectileAngle)
-
+      // have an option for turning backwards
+      let negDelta= (projectileAngle - targetAngle-360)
       let deltaDegree = (targetAngle - projectileAngle)
+
+      //console.log("neg",negDelta)
+      //console.log("pos",deltaDegree)
+
+      // if turning clockwise is faster than anti-clockwise
+      if(Math.abs(negDelta)<Math.abs(deltaDegree)){
+      //  deltaDegree = negDelta
+      }
+
+
 
       deltaDegree = Math.min(Math.abs(deltaDegree), this.mMaxRotation)*Math.sign(deltaDegree)
       

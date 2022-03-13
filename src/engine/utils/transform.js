@@ -27,6 +27,11 @@ class Transform {
     getCenterPos(){
         return vec2.fromValues(this.mPosition[0] + this.mScale[0]/2,this.mPosition[1] + this.mScale[1]/2);
     }
+
+
+    getFrontMiddle(){
+        return vec2.fromValues(this.mPosition[0]+this.mScale[0], this.mPosition[1] + this.mScale[1]/2);
+    }
     
     setSize(width, height) {
         this.setWidth(width);

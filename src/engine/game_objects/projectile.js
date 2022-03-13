@@ -103,7 +103,6 @@ class Projectile extends engine.GameObject {
   // supports straight at a target object
   // target point
   // target direction
-
   setStraight(target = null, targetPoint = null, targetDirection = null, speed = 0, acceleration = 0) {
     this.mSpeed = speed;
     this.acceleration = acceleration;
@@ -140,6 +139,7 @@ class Projectile extends engine.GameObject {
 
   }
   // supports target object
+  // maxRotation is in degrees per tick, ex) limiting to 20 degrees/second = 20/60 = 0.33
   setTracking(target, maxRotation = 360, speed = 0, acceleration = 0) {
 
     this.mSpeed = speed;
@@ -278,31 +278,29 @@ class Projectile extends engine.GameObject {
      
       let centeredDesiredPoint = vec2.fromValues(desiredPoint[0] - pCenter[0], desiredPoint[1] - pCenter[1]);
       
-      let centeredFront = vec2.fromValues((this.mCurrentFrontDir[0] * pCenter[0]), (this.mCurrentFrontDir[1] * pCenter[1]));
+      let radius= Math.max(xf.mScale[0],xf.mScale[1])/2
+      let centeredFront = vec2.fromValues(radius*Math.cos(this.facingDegree*Math.PI/180),radius*Math.sin(this.facingDegree*Math.PI/180));
       
-     //console.log(centeredDesiredPoint)
-      //console.log(centeredFront)
+    
       let projectileAngle = Math.atan(centeredFront[1] / centeredFront[0]) * 180 / Math.PI
       let targetAngle = Math.atan(centeredDesiredPoint[1] / centeredDesiredPoint[0]) * 180 / Math.PI
-      console.log("t",targetAngle)
-      console.log("p",projectileAngle)
-      let deltaDegree = (projectileAngle - targetAngle)
+      //console.log("t",targetAngle)
+      //console.log("p",projectileAngle)
+      let deltaDegree = (targetAngle - projectileAngle)
 
-      deltaDegree = Math.min(Math.abs(deltaDegree), this.mMaxRotation)
-      if (deltaDegree<0.1){
-        deltaDegree=0
-      }
-      console.log("delta degree",deltaDegree)
+      deltaDegree = Math.min(Math.abs(deltaDegree), this.mMaxRotation)*Math.sign(deltaDegree)
+      
+      //console.log("delta degree",deltaDegree)
+      //console.log("facing degree",this.facingDegree)
 
-      //increase current front direction by deltadegree
-      // increase rotation by deltadegree
+
       
       this.facingDegree+=deltaDegree;
      
       let x = Math.cos(this.facingDegree * Math.PI / 180)
       let y = Math.sin(this.facingDegree * Math.PI / 180)
 
-      
+      //console.log("dir",x,y)
       this.setCurrentFrontDir(vec2.fromValues(x, y))
       xf.setRotationInDegree(this.facingDegree)
      

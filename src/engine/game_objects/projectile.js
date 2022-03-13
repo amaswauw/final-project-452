@@ -282,16 +282,31 @@ class Projectile extends engine.GameObject {
       let centeredFront = vec2.fromValues(radius*Math.cos(this.facingDegree*Math.PI/180),radius*Math.sin(this.facingDegree*Math.PI/180));
       
     
-      let projectileAngle = Math.atan(centeredFront[1] / centeredFront[0]) * 180 / Math.PI
-      let targetAngle = Math.atan(centeredDesiredPoint[1] / centeredDesiredPoint[0]) * 180 / Math.PI
+      let projectileAngle = Math.atan(centeredFront[1]/ centeredFront[0]) * 180 / Math.PI
+      let targetAngle = Math.atan(centeredDesiredPoint[1]/centeredDesiredPoint[0]) * 180 / Math.PI
       //console.log("t",targetAngle)
-      //console.log("p",projectileAngle)
+      // fix the quadrant problem of atan
+      //quadrant 2
+      if(centeredDesiredPoint[0]<0){
+        targetAngle+=180
+      }else if(centeredDesiredPoint[1]<0){
+        targetAngle+=360
+      }
+      if(centeredFront[0]<0){
+        projectileAngle+=180
+      }else if(centeredFront[1]<0){
+        projectileAngle+=360
+      }
+     
+      console.log("fixed t",targetAngle)
+      console.log("fixed p",projectileAngle)
+
       let deltaDegree = (targetAngle - projectileAngle)
 
       deltaDegree = Math.min(Math.abs(deltaDegree), this.mMaxRotation)*Math.sign(deltaDegree)
       
       //console.log("delta degree",deltaDegree)
-      //console.log("facing degree",this.facingDegree)
+     // console.log("facing degree",this.facingDegree)
 
 
       

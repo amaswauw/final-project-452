@@ -81,7 +81,7 @@ class MyGame extends engine.Scene {
         this.mProjectileT.getXform().setSize(5, 4);
         this.mProjectileT.setTrailSize(2, 1);
         this.mProjectileT.getXform().setPosition(20, 20);
-        this.mProjectileT.setTracking(this.mPortal, 0.33, 0.1, 0)
+        this.mProjectileT.setTracking(this.mPortal, 1, 0, 0)
 
         this.mProjectileP = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
         this.mProjectileP.getXform().setSize(5, 4);

@@ -81,7 +81,7 @@ class MyGame extends engine.Scene {
         this.mProjectileT.getXform().setSize(5, 4);
         this.mProjectileT.setTrailSize(2, 1);
         this.mProjectileT.getXform().setPosition(20, 20);
-        this.mProjectileT.setTracking(this.mPortal, 1, 0, 0)
+        this.mProjectileT.setTracking(this.mPortal, 11, 1, 0)
 
         this.mProjectileP = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
         this.mProjectileP.getXform().setSize(5, 4);
@@ -107,11 +107,7 @@ class MyGame extends engine.Scene {
         this._drawCamera(this.mCamera);
 
         // draw all projectiles
-        for (let i = 0; i < this.mProjectileSet.length; i++)    {
-            if (this.mProjectileSet[i].mValid) {
-                this.mProjectileSet[i].draw(this.mCamera);
-            }
-        }
+        Projectile.drawAllProjectiles(this.mCamera)
 
         this.mProjectileT.draw(this.mCamera);
         this.mProjectileP.draw(this.mCamera);
@@ -139,17 +135,20 @@ class MyGame extends engine.Scene {
             this.mProjectile.setStraight(null , null, Math.random() * Math.PI * 2, 0.3, 0.01)
             this.mProjectileSet.push(this.mProjectile);
         }
-        
+        /*
         for (let i = 0; i < this.mProjectileSet.length; i++)    {
             if (this.mProjectileSet[i].mValid) {
-                this.mProjectileSet[i].update(this.mCamera);
+                this.mProjectileSet[i].update();
             }
         }
+        */
+        Projectile.updateAllProjectiles()
+
 
         // TEST
         //
-        this.mProjectileT.update();
-        this.mProjectileP.update();
+        //this.mProjectileT.update();
+        //this.mProjectileP.update();
         //
         // TEST
 

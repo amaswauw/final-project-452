@@ -146,7 +146,6 @@ class Projectile extends engine.GameObject {
     this.acceleration = acceleration;
     this.mMaxRotation = maxRotation;
     this.targetPoint = null;
-    this.tracking = true;
     if (target instanceof GameObject) {
       this.pathType = "tracking"
       this.target = target;
@@ -154,15 +153,6 @@ class Projectile extends engine.GameObject {
     }
   }
 
-  // setParabolaT(target = null, maxPrependicularAmplitude = 0, speed = 0, acceleration = 0) {
-  //   this.mSpeed = speed;
-  //   this.acceleration = acceleration;
-  //   if (target instanceof GameObject) {
-  //     this.pathType = "parabolic target";
-  //     this.target = target;
-  //     this.mCurrentFrontDir = vec2.fromValues(1, 1);
-  //   }
-  // } // sets path type to be parabolic
 
 
   setParabolaD(direction = null, speed = 0, accDirection = [0, -1], accMagnitude = (9.8 / 10000)) {
@@ -239,39 +229,8 @@ class Projectile extends engine.GameObject {
 
     this.mSpeed += this.acceleration;
     if (this.pathType === "tracking") {
-      // // console.log(this.target);
-      // let desiredPoint = vec2.fromValues(this.target.getXform().getPosition()[0], this.target.getXform().getPosition()[1]);
-      // desiredPoint[0]+=(this.target.getXform().getWidth()/2);
-      // desiredPoint[1]+=(this.target.getXform().getHeight()/2);
-      // let pCenter = vec2.fromValues(xf.getCenterPos()[0],xf.getCenterPos()[1])
-      // //console.log(pCenter)
-      // let centeredDesiredPoint = vec2.fromValues(desiredPoint[0] - pCenter[0], desiredPoint[1] - pCenter[1]);
-      // //console.log(centeredDesiredPoint)
-      // let centeredFront = vec2.fromValues(this.mCurrentFrontDir[0] - pCenter[0], this.mCurrentFrontDir[1] - pCenter[1]); 
       
-      // //console.log(xf.getCenterPos(), this.target.getXform().getCenterPos())
-      // let fAngle = Math.atan(centeredFront[1]/centeredFront[0])
-      // let pAngle = Math.atan(centeredDesiredPoint[1]/centeredDesiredPoint[0])
-      // //console.log(fAngle/Math.PI*180, pAngle/Math.PI*180)
-      // let unitDegree =  Math.round((pAngle - fAngle )* 180 / Math.PI)
-      // unitDegree+=45
-      // if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] >= xf.getCenterPos()[1]) {
-      //   console.log("first check")
-      //   unitDegree = (180 + unitDegree);
-      // }
-      // if (this.target.getXform().getCenterPos()[0] <= xf.getCenterPos()[0] && this.target.getXform().getCenterPos()[1] <= xf.getCenterPos()[1]) {
-      //   console.log("first check")
-      //   unitDegree = (180 + unitDegree);
-      // }
-      // if (unitDegree >= 360) {
-      //   unitDegree -= 360;
-      // }
-      // let x = Math.cos(unitDegree*Math.PI/180)
-      // let y = Math.sin(unitDegree*Math.PI/180)
-      
-      // this.setCurrentFrontDir(vec2.fromValues(x,y))
-      // xf.setRotationInDegree(unitDegree);
-      // console.log(this.target);
+
       let desiredPoint = vec2.fromValues(this.target.getXform().getCenterPos()[0], this.target.getXform().getCenterPos()[1]);
       let pCenter = vec2.fromValues(xf.getCenterPos()[0], xf.getCenterPos()[1])
       
@@ -379,7 +338,27 @@ class Projectile extends engine.GameObject {
     this.bounce(GameObject.gameObjectSet);
     super.update();
   }
-  // checks collisions -> calls bounce(), onTermination()
-  // onSpawn() inFlight(), onTermination() if conditions are met
+  
+
+  static updateAllProjectiles(){
+    for(let gameObject of GameObject.gameObjectSet.mSet){
+      if(gameObject instanceof Projectile){
+        gameObject.update()
+      }
+    }
+    
+  }
+
+   static drawAllProjectiles(camera){
+    for(let gameObject of GameObject.gameObjectSet.mSet){
+      if(gameObject instanceof Projectile){
+        gameObject.draw(camera)
+      }
+    }
+    
+  }
+
+
+
 }
 export default Projectile;

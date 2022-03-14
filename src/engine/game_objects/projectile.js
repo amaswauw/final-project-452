@@ -300,15 +300,21 @@ class Projectile extends engine.GameObject {
       }
      
       // have an option for turning backwards
-      let negDelta= (projectileAngle - targetAngle-360)
+      // if the projectile is in quadrant 1 and the target is in quadrant 4
+      let q1toq4= (360-targetAngle+projectileAngle) * -1
+      // if the projectile is in quadrant 4 and the target is in quadrant 1
+      let q4toq1= (360-projectileAngle+targetAngle) 
       let deltaDegree = (targetAngle - projectileAngle)
 
       //console.log("neg",negDelta)
       //console.log("pos",deltaDegree)
-
-      // if turning clockwise is faster than anti-clockwise
-      if(Math.abs(negDelta)<Math.abs(deltaDegree)){
-      //  deltaDegree = negDelta
+      
+      if (Math.abs(q1toq4)<Math.abs(deltaDegree)){
+        deltaDegree = q1toq4
+      }
+      
+      if (Math.abs(q4toq1)<Math.abs(deltaDegree)){
+        deltaDegree = q4toq1
       }
 
 

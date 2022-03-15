@@ -10,6 +10,10 @@ class Box extends engine.GameObject {
         this.mRenderComponent.getXform().setSize(150, 50);
         this.mRenderComponent.getXform().setPosition(100, 20);
     }
+
+    getRenderable() {
+        return this.mRenderComponent;
+    }
 }
 
 export default Box;

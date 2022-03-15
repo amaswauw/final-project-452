@@ -14,6 +14,15 @@ class Ball extends Projectile    {
         this.spacePressed = false;
     }
 
+    reset() {
+        this.getXform().setPosition(20, 75);
+        this.mSpeed = 0;
+        this.acceleration = 0;
+        this.accDirection = [0, 0];
+        this.spacePressed = false;
+        this.strength = 0.1;
+    }
+
     update()    {
         super.update();
         if (engine.input.isKeyPressed(engine.input.keys.Space) && !this.spacePressed) {
@@ -24,12 +33,15 @@ class Ball extends Projectile    {
             this.spacePressed = true;
         }
         if (engine.input.isKeyClicked(engine.input.keys.R)) {
-            this.getXform().setPosition(20, 75);
-            this.mSpeed = 0;
-            this.acceleration = 0;
-            this.accDirection = [0, 0];
+            this.reset();
         }
-        // console.log(this.getXform().getPosition())
+    }
+
+    checkSink() {
+        if ((this.getXform().getXPos() > 130 && this.getXform().getXPos() < 171) &&
+           (this.getXform().getYPos() > 75 && this.getXform().getYPos() < 80))  {
+               return true;
+           }
     }
 }
 

@@ -3,10 +3,12 @@
 import engine from "../engine/index.js";
 
 import SpaceFight from "./Space_Fight.js";
+import Box from "./objects/box.js"
 import Ball from "./objects/ball.js";
 import GameObject from "../engine/game_objects/game_object.js";
 import GameObjectSet from "../engine/game_objects/game_object_set.js";
 import TextureRenderable from "../engine/renderables/texture_renderable_main.js";
+import Top from "./objects/top.js";
 
 class BeerPong extends engine.Scene {
   constructor() {
@@ -21,6 +23,12 @@ class BeerPong extends engine.Scene {
         // The camera to view the scene
         this.mCamera = null;
         this.mBg = null;
+
+        this.ball = null;
+        this.firstCupBox = null;
+        this.cup1 = null;
+        this.cup2 = null;
+        this.table = null;
 
     }
 
@@ -58,7 +66,7 @@ class BeerPong extends engine.Scene {
 
 
         this.ball = new Ball(this.kBall, Infinity, null, null, null);
-        this.ball.getXform().setSize(10, 10);
+        this.ball.getXform().setSize(7.5, 7.5);
         this.ball.getXform().setPosition(20, 75);
 
         this.table = new Box(this.kTable);
@@ -66,12 +74,15 @@ class BeerPong extends engine.Scene {
         this.table.getXform().setPosition(100, 20);
         GameObject.gameObjectSet.addToSet(this)
 
-        this.cup1 = new TextureRenderable(this.kCup);
-        this.cup2 = new TextureRenderable(this.kCup);
+        this.cup1 = new Top(this.kCup);
+        this.cup2 = new Top(this.kCup);
         this.cup1.getXform().setSize(20, 40);
         this.cup2.getXform().setSize(20, 40);
         this.cup1.getXform().setPosition(160, 60);
         this.cup2.getXform().setPosition(140, 60);
+
+        // this.firstCupBox = new Top(this.kTable);
+
     }
 
     _drawCamera(camera) {
@@ -81,6 +92,7 @@ class BeerPong extends engine.Scene {
         this.table.draw(camera);
         this.cup1.draw(camera);
         this.cup2.draw(camera);
+        // this.firstCupBox.draw(camera);
     }
 
     // This is the draw function, make sure to setup proper drawing environment, and more
@@ -97,6 +109,7 @@ class BeerPong extends engine.Scene {
     // anything from this function!
     update() {
         this.ball.update();
+        this.checkIfSinks();
     }
 
     next() {
@@ -105,6 +118,13 @@ class BeerPong extends engine.Scene {
 
         let nextLevel = new SpaceFight();
         nextLevel.start();
+    }
+
+    checkIfSinks()  {
+        let hitPos = []
+        if (this.ball.checkSink())    {
+            this.ball.reset();
+        }
     }
 
 };

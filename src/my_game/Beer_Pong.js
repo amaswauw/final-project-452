@@ -4,7 +4,6 @@ import engine from "../engine/index.js";
 
 import SpaceFight from "./Space_Fight.js";
 import Ball from "./objects/ball.js";
-import Box from "./objects/box.js";
 import GameObject from "../engine/game_objects/game_object.js";
 import GameObjectSet from "../engine/game_objects/game_object_set.js";
 import TextureRenderable from "../engine/renderables/texture_renderable_main.js";
@@ -65,6 +64,7 @@ class BeerPong extends engine.Scene {
         this.table = new Box(this.kTable);
         this.table.getXform().setSize(150, 50);
         this.table.getXform().setPosition(100, 20);
+        GameObject.gameObjectSet.addToSet(this)
 
         this.cup1 = new TextureRenderable(this.kCup);
         this.cup2 = new TextureRenderable(this.kCup);

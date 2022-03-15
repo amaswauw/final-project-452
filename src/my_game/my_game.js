@@ -3,17 +3,11 @@
 import engine from "../engine/index.js";
 
 // user stuff
-import Brain from "./objects/brain.js";
 import Hero from "./objects/hero.js";
-import Box from "./objects/box.js"
-import Minion from "./objects/minion.js";
 import TextureObject from "./objects/texture_object.js";
 import Projectile from "../engine/game_objects/projectile.js"
-import TrailRenderable from "../engine/renderables/trail_renderable.js";
-import TextureRenderable from "../engine/renderables/texture_renderable_main.js";
 import FontRenderable from "../engine/renderables/font_renderable.js";
-// import { vec2 } from "../lib/gl-matrix.js";
-// import { vec2 } from "../lib/gl-matrix.js";
+import Box from "./objects/box.js"
 
 class MyGame extends engine.Scene {
     constructor() {
@@ -149,33 +143,16 @@ class MyGame extends engine.Scene {
         this.mCamera.update();  // for smoother camera movements
         
         // Spawn projectile at hero position
-        if (engine.input.isKeyClicked(engine.input.keys.Space)) {
+        if (engine.input.isKeyClicked(engine.input.keys.Space)) {  
             this.mProjectile = new Projectile(this.kBeam, 1000, this.kT, 250 , 100);
             this.mProjectile.getXform().setSize(5, 4);
             this.mProjectile.getXform().setPosition(this.mHero.getXform().getXPos() + this.mHero.getXform().getWidth()/2, this.mHero.getXform().getYPos() + this.mHero.getXform().getHeight()/3.8);
-            this.mProjectile.setStraight(null , null, 0/*Math.random() * Math.PI * 2*/, 0.3, 0.01)
+            this.mProjectile.setStraight(null , null, Math.random()*90-45, 0.3, 0.01)
 
             this.mProjectile.setBouncingPrototypes([Box]);
             this.mProjectileSet.push(this.mProjectile);
         }
-        /*
-        for (let i = 0; i < this.mProjectileSet.length; i++)    {
-            if (this.mProjectileSet[i].mValid) {
-                this.mProjectileSet[i].update();
-            }
-        }
-        */
         Projectile.updateAllProjectiles();
-
-        // this.mBarrier.update();
-
-
-        // TEST
-        //
-        //this.mProjectileT.update();
-        //this.mProjectileP.update();
-        //
-        // TEST
 
         this.mHero.update();
         

@@ -45,7 +45,6 @@ class Projectile extends engine.GameObject {
         this.trailSet.push(new TrailRenderable(this.trailRenderable, this.trailLifetime, this.getXform()), this.trailSize);
       }
       this.trailTimer = performance.now();
-      //console.log(this.trailSet)
     }
   }
 
@@ -73,44 +72,54 @@ class Projectile extends engine.GameObject {
       for (let gameObject of GameObject.gameObjectSet.mSet) {
         if (gameObject instanceof objtype) {
           let h = [];
-          if (this.pixelTouches(gameObject, h) && !this.noBounceSet.has(gameObject)) {
-            console.log(this.noBounceSet)
+          if (this.pixelTouches(gameObject, h) && !this.noBounceSet.has(gameObject )) {
+            
             // let corners = gameObject.getXform().getCorners();
             // x and y centered to the object center, then normalized 
             let x = (h[0] - gameObject.getXform().getPosition()[0]) / (gameObject.getXform().getWidth() / 2)
             let y = (h[1] - gameObject.getXform().getPosition()[1]) / (gameObject.getXform().getHeight() / 2)
-            console.log(x, y)
             // bouncing off top
-            if (-y < x < y) {
-              console.log("top")
-            }
-            // bouncing off right side
-            if (-x < y < x) {
-              console.log("right")
-            }
-            // bouncing off bottom
-            if (-y > x > y) {
-              console.log("bottom") 
-            }
-            // bouncing off left side
-            if (-x > y > x) {
-              console.log("left")
+            if (-y < x && x < y) {
+              let newDir = this.getCurrentFrontDir();
+              newDir[1] = -newDir[1];
+              this.setCurrentFrontDir(newDir);
+              var angle = Math.atan2(newDir[1], newDir[0]);
+              var degrees = 180 * angle / Math.PI;
+              degrees = (360 + Math.round(degrees)) % 360;
+              this.getXform().setRotationInDegree(degrees)
+            } else if (-x < y && y < x) { // bouncing off right side
+              let newDir = this.getCurrentFrontDir();
+              newDir[0] = -newDir[0];
+              this.setCurrentFrontDir(newDir);
+              var angle = Math.atan2(newDir[1], newDir[0]);
+              var degrees = 180 * angle / Math.PI;
+              degrees = (360 + Math.round(degrees)) % 360;
+              this.getXform().setRotationInDegree(degrees)
+            } else if (-y > x&& x > y) { // bouncing off bottom
+              let newDir = this.getCurrentFrontDir();
+              newDir[1] = -newDir[1];
+              this.setCurrentFrontDir(newDir);
+              var angle = Math.atan2(newDir[1], newDir[0]);
+              var degrees = 180 * angle / Math.PI;
+              degrees = (360 + Math.round(degrees)) % 360;
+              this.getXform().setRotationInDegree(degrees)
+            } else if (-x > y && y> x) { // bouncing off left side
+              let newDir = this.getCurrentFrontDir();
+              newDir[0] = -newDir[0];
+              this.setCurrentFrontDir(newDir);
+              var angle = Math.atan2(newDir[1], newDir[0]);
+              var degrees = 180 * angle / Math.PI;
+              degrees = (360 + Math.round(degrees)) % 360;
+              this.getXform().setRotationInDegree(degrees)
             }
 
 
             this.noBounceSet.add(gameObject);
-            //  this.setSpeed(-this.getSpeed());
-            // let rotAngle = Math.atan(reflect[1]/reflect[0]) * 180 / Math.PI;
-            // if (reflect[0] < 0 && reflect[1] > 0) {
-            //   rotAngle += 180;
-            // } else if (reflect[0] < 0 && reflect[1] < 0) {
-            //   rotAngle += 180;
-            // } else if (reflect[0] > 0 && reflect[1] < 0) {
-            //   rotAngle += 360;
-            // }
-            // this.getXform().setRotationInDegree(rotAngle);
           } else {
-            this.noBounceSet.delete(gameObject);
+            let otherBbox = gameObject.getBBox();
+            if (!otherBbox.intersectsBound(this.getBBox())) {
+              this.noBounceSet.delete(gameObject);
+            }
           }
         }
       }
@@ -119,24 +128,10 @@ class Projectile extends engine.GameObject {
 
   }
 
-  reflect(vector, normal) {
-    let reflect = vec2.clone(vector);
-    reflect = vec2.scale(reflect, normal, -2 * vec2.dot(vector, normal));
-    reflect = vec2.add(reflect, reflect, vector);
-    // if (direction === "bottom") {
-    //   reflect[1] = Math.abs(reflect[1])
-    // } else if (direction === "top") {
-    //   if (reflect[1] > 0) {
-    //     reflect[1] = -reflect[1];
-    //   }
-    // }
-    return reflect;
-  }
-
   // Path types
   // supports straight at a target object
   // target point
-  // target direction
+  // target direction, in degrees
   setStraight(target = null, targetPoint = null, targetDirection = null, speed = 0, acceleration = 0) {
     this.mSpeed = speed;
     this.acceleration = acceleration;
@@ -147,7 +142,7 @@ class Projectile extends engine.GameObject {
 
       point[0] += (target.getXform().getWidth() / 2);
       point[1] += (target.getXform().getHeight() / 2);
-      this.setCurrentFrontDir(point);
+      this.setCurrentFrontDir(point);  
 
       let rot = Math.atan2(point[1] + this.getXform().getPosition()[1], point[0] + this.getXform().getPosition()[0]);
       this.getXform().setRotationInRad(rot);
@@ -159,8 +154,10 @@ class Projectile extends engine.GameObject {
       this.getXform().setRotationInRad(rot);
 
     }
-    // target direction is a radian
+    // target direction is a degree
     else if (targetDirection != null) {
+      //convert to radians
+      targetDirection = targetDirection/180*Math.PI
       let x = Math.cos(targetDirection)
       let y = Math.sin(targetDirection);
       this.setCurrentFrontDir(vec2.fromValues(x, y));

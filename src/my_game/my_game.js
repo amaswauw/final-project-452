@@ -15,7 +15,7 @@ class MyGame extends engine.Scene {
         super();
 
         // Assets
-        this.kHeroShip = "assets/heroShip.png";
+        this.kHeroShip = "assets/heroShip.png"
         this.kT = "assets/bullet_trail.png";
         this.kBg = "assets/bg.png";
         this.kRedMissile = "assets/goodMissile.png";

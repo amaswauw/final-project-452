@@ -3,65 +3,79 @@
 import engine from "../engine/index.js";
 
 // user stuff
-import Brain from "./objects/brain.js";
 import Hero from "./objects/hero.js";
-import Minion from "./objects/minion.js";
-import TextureObject from "./objects/texture_object.js";
-import Projectile from "../engine/game_objects/projectile.js"
-import TrailRenderable from "../engine/renderables/trail_renderable.js";
-import TextureRenderable from "../engine/renderables/texture_renderable_main.js";
+import Missile from "./objects/missile.js";
+import Enemy from "./objects/enemy.js";
+import FontRenderable from "../engine/renderables/font_renderable.js";
 // import { vec2 } from "../lib/gl-matrix.js";
 // import { vec2 } from "../lib/gl-matrix.js";
 
 class MyGame extends engine.Scene {
     constructor() {
         super();
-        this.kMinionSprite = "assets/minion_sprite.png";
-        this.kMinionPortal = "assets/minion_portal.png";
-        this.kBeam = "assets/Terra_Blade_Beam.png";
-        this.kBeam2 = "assets/second_beam.png";
-        this.kT = "assets/projectile-png-7.png";
+
+        // Assets
+        this.kHeroShip = "assets/heroShip.png";
+        this.kT = "assets/bullet_trail.png";
         this.kBg = "assets/bg.png";
+        this.kRedMissile = "assets/goodMissile.png";
+        this.kEnemyShip = "assets/enemyShip.png";
+        this.kExplosion = "assets/explosion.png";
+        this.kEnemyMissile = "assets/badMissile.png";
 
         // The camera to view the scene
         this.mCamera = null;
         this.mBg = null;
+
         // the hero and the support objects
         this.mHero = null;
-        this.mPortal = null;
+        this.mText = null;
+        this.mEnemySet = [];
 
         // Projectiles
-        this.mProjectileSet = [];
-        this.mProjectile = null;
-        this.mProjectileT = null;
-        this.mProjectileP = null;
+        this.mHeroMissileSet = [];
+        this.mEnemyMissileSet = [];
+
+        // timer for autoSpawn
+        this.autospawnTimer = null;
+        this.timeInterval = 2000;
+        this.timer = null;
+
+        // timers for enemy missiles
+        this.missileInterval = 3000;
+
+        // Points
+        this.points = 0;
+
     }
 
     load() {
-        engine.texture.load(this.kBeam); // loading texture of a projectile
         engine.texture.load(this.kT); // loading a trail for a projectile
-        engine.texture.load(this.kBeam2);
-        engine.texture.load(this.kMinionSprite);
-        engine.texture.load(this.kMinionPortal);
+        engine.texture.load(this.kHeroShip);
         engine.texture.load(this.kBg);
+        engine.texture.load(this.kEnemyShip);
+        engine.texture.load(this.kRedMissile);
+        engine.texture.load(this.kExplosion);
+        engine.texture.load(this.kEnemyMissile)
     }
 
     unload() {
-        engine.texture.unload(this.kBeam);
-        engine.texture.load(this.kBeam2);
+        engine.texture.unload(this.kEnemyShip);
         engine.texture.unload(this.kT);
-        engine.texture.unload(this.kMinionSprite);
-        engine.texture.unload(this.kMinionPortal);
+        engine.texture.unload(this.kHeroShip);
         engine.texture.unload(this.kBg);
+        engine.texture.unload(this.kRedMissile);
+        engine.texture.unload(this.kExplosion);
+        engine.texture.unload(this.kEnemyMissile);
     }
 
     init() {
        
         // Step A: set up the cameras
         this.mCamera = new engine.Camera(
-            vec2.fromValues(50, 36), // position of the camera
-            100,                       // width of camera
-            [0, 0, 640, 480]           // viewport (orgX, orgY, width, height)
+            vec2.fromValues(100, 75), // position of the camera
+            200,                       // width of camera
+            [0, 0, 1280, 960]           // viewport (orgX, orgY, width, height)
         );
         this.mCamera.setBackgroundColor([0.8, 0.8, 0.8, 1]);
         // sets the background to gray
@@ -69,32 +83,41 @@ class MyGame extends engine.Scene {
         // Large background image
         let bgR = new engine.SpriteRenderable(this.kBg);
         bgR.setElementPixelPositions(0, 1024, 0, 1024);
-        bgR.getXform().setSize(150, 150);
-        bgR.getXform().setPosition(50, 35);
+        bgR.getXform().setSize(275, 275);
+        bgR.getXform().setPosition(100, 135);
         this.mBg = new engine.GameObject(bgR);
 
         // Objects in the scene
-        this.mHero = new Hero(this.kMinionSprite);
-        this.mPortal = new TextureObject(this.kMinionPortal, 50, 20, 10, 10);
+        this.mHero = new Hero(this.kHeroShip);
+        this.mEnemy = new Enemy(this.kEnemyShip, this.mCamera);
+        this.mEnemySet.push(this.mEnemy);
 
-        this.mProjectileT = new Projectile(this.kBeam2, Infinity, this.kT, 500, 10);
-        this.mProjectileT.getXform().setSize(5, 4);
-        this.mProjectileT.setTrailSize(2, 1);
-        this.mProjectileT.getXform().setPosition(20, 20);
-        this.mProjectileT.setTracking(this.mPortal, 11, 1, 0)
+        this.mText = new FontRenderable("Score: " + this.points);
+        this.mText.getXform().setPosition(10, 10);
+        this.mText.setTextHeight(10);
 
-        this.mProjectileP = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
-        this.mProjectileP.getXform().setSize(5, 4);
-        this.mProjectileP.setTrailSize(2, 1);
-        this.mProjectileP.getXform().setPosition(40, 40);
-        this.mProjectileP.setParabolaD(vec2.fromValues(1, 1), 0.15);
+        // Initialize AutoSpawner
+        this.autospawnTimer = performance.now();
     }
 
     _drawCamera(camera) {
         camera.setViewAndCameraMatrix();
         this.mBg.draw(camera);
+        
+        // Draw Hero Missiles
+        for (let i = 0; i < this.mHeroMissileSet.length; i++)   {
+            this.mHeroMissileSet[i].draw(camera);
+        }
+
+        for (let missile of this.mEnemyMissileSet)  {
+            missile.draw(camera);
+        }
+
+        // draw Objects
         this.mHero.draw(camera);
-        this.mPortal.draw(camera);
+        for (let enemy of this.mEnemySet) {
+            enemy.draw(camera);
+        }
     }
 
     // This is the draw function, make sure to setup proper drawing environment, and more
@@ -105,84 +128,102 @@ class MyGame extends engine.Scene {
 
         // Step  B: Draw with all three cameras
         this._drawCamera(this.mCamera);
-
-        // draw all projectiles
-        Projectile.drawAllProjectiles(this.mCamera)
-
-        this.mProjectileT.draw(this.mCamera);
-        this.mProjectileP.draw(this.mCamera);
-    }
-
-    checkObjectLifespan() {
-        // loop through to check
-        for (let i = 0; i < this.mProjectileSet.length; i++) {
-            if (!this.mProjectileSet[i].mValid) {
-                this.mProjectileSet.splice(i, 1);
-            }
-        }
+        
     }
 
     // The update function, updates the application state. Make sure to _NOT_ draw
     // anything from this function!
     update() {
-        this.mCamera.update();  // for smoother camera movements
-        
-        // Spawn projectile at hero position
-        if (engine.input.isKeyClicked(engine.input.keys.Space)) {
-            this.mProjectile = new Projectile(this.kBeam, 1000, this.kT, 250 , 100);
-            this.mProjectile.getXform().setSize(5, 4);
-            this.mProjectile.getXform().setPosition(this.mHero.getXform().getXPos() + this.mHero.getXform().getWidth()/2, this.mHero.getXform().getYPos() + this.mHero.getXform().getHeight()/3.8);
-            this.mProjectile.setStraight(null , null, Math.random() * Math.PI * 2, 0.3, 0.01)
-            this.mProjectileSet.push(this.mProjectile);
-        }
-        /*
-        for (let i = 0; i < this.mProjectileSet.length; i++)    {
-            if (this.mProjectileSet[i].mValid) {
-                this.mProjectileSet[i].update();
-            }
-        }
-        */
-        Projectile.updateAllProjectiles()
+        // update objects
+        this.mHero.update();    
+        this.mEnemy.update();
 
-
-        // TEST
-        //
-        //this.mProjectileT.update();
-        //this.mProjectileP.update();
-        //
-        // TEST
-
-        this.mHero.update();
-        
-        
-        // for WASD movement
-        this.mPortal.update(     // for arrow movement
-            engine.input.keys.Up,
-            engine.input.keys.Down,
-            engine.input.keys.Left,
-            engine.input.keys.Right
-        );
-        // testing the mouse input
-        if (engine.input.isButtonPressed(engine.input.eMouseButton.eLeft)) {
-            if (this.mCamera.isMouseInViewport()) {
-                this.mPortal.getXform().setXPos(this.mCamera.mouseWCX());
-                this.mPortal.getXform().setYPos(this.mCamera.mouseWCY());
-            }
-        }
-        if (engine.input.isButtonPressed(engine.input.eMouseButton.eMiddle)) {
-            if (this.mHeroCam.isMouseInViewport()) {
-                this.mHero.getXform().setXPos(this.mHeroCam.mouseWCX());
-                this.mHero.getXform().setYPos(this.mHeroCam.mouseWCY());
-            }
-        }
-        if (engine.input.isButtonClicked(engine.input.eMouseButton.eRight)) {
-            this.mPortal.setVisibility(false);
-        }
-
-        if (engine.input.isButtonClicked(engine.input.eMouseButton.eMiddle)) {
-            this.mPortal.setVisibility(true);
-        }
+        // helper update functions
         this.checkObjectLifespan();
+        this.updateMissiles();
+        this.spawnHeroMissiles(); 
+        this.spawnEnemyMissiles();
+        this.checkEnemyHit();   
+        this.autoSpawnEnemy()
+    }
+
+    checkObjectLifespan() {
+        // loop through to check
+        for (let i = 0; i < this.mHeroMissileSet.length; i++)   {
+            if (!this.mHeroMissileSet[i].mValid)    {
+                this.mHeroMissileSet.splice(i, 1);
+            }
+        }
+        for (let i = 0; i < this.mEnemySet.length; i++) {
+            if (!this.mEnemySet[i].mValid)  {
+                this.mEnemySet.splice(i, 1)
+            }
+        }
+    }
+
+    updateMissiles()    {
+        for (let i = 0; i < this.mHeroMissileSet.length; i++)   {
+            this.mHeroMissileSet[i].update();
+        }
+        for (let i = 0; i < this.mEnemyMissileSet.length; i++)  {
+            this.mEnemyMissileSet[i].update();
+        }
+    }
+
+    spawnHeroMissiles() {
+        if (engine.input.isKeyClicked(engine.input.keys.Space)) {
+            // get xform from Hero and calculate missile spawn position
+            let xform = this.mHero.getXform();
+            
+            // create Missile
+            let missile = new Missile(this.kRedMissile, 3000, this.kT, Infinity, 10);
+            missile.getXform().setSize(6, 3);
+            missile.getXform().setPosition(xform.getXPos(), xform.getYPos());
+            missile.setStraight(null, null, xform.getRotationInRad() , 0.6, 0.005);
+
+            // Push missile into missile set 
+            this.mHeroMissileSet.push(missile);
+        }
+    }
+
+    spawnEnemyMissiles()    {
+        for (let i = 0; i < this.mEnemySet.length; i++) {
+            if (!this.mEnemySet[i].poo) {
+                let xform = this.mEnemySet[i].getXform();
+                
+                // create Missile
+                let missile = new Missile(this.kEnemyMissile, 3000, this.kT, Infinity, 10);
+                missile.getXform().setSize(5, 4);
+                missile.getXform().setPosition(xform.getXPos(), xform.getYPos());
+                missile.setStraight(this.mHero, null, null, 0.5, 0);
+
+                // Push missile into missile set 
+                this.mEnemyMissileSet.push(missile);
+                this.mEnemySet[i].poo = true;
+            }
+        }
+    }
+
+    checkEnemyHit() {
+        let hitPos = [];
+
+        for (let i = 0; i < this.mHeroMissileSet.length; i++)   {
+            for (let j = 0; j < this.mEnemySet.length; j++) {
+                if (this.mHeroMissileSet[i].pixelTouches(this.mEnemySet[j], hitPos))  {
+                    this.mEnemySet[j].mValid = false;
+                    this.points++;
+                    console.log(this.points);
+                }
+            }
+        }
+    }
+
+    autoSpawnEnemy()    {
+        this.timeInterval += 2000;
+        setTimeout(() => {
+            let enemy = new Enemy(this.kEnemyShip, this.mCamera);
+            this.mEnemySet.push(enemy);
+        }, this.timeInterval);
     }
 }
 

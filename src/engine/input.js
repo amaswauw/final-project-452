@@ -10,6 +10,7 @@
 
 // Key code constants
 const keys = {
+    Shift: 16,
     // arrows
     Left: 37,
     Up: 38,

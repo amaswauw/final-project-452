@@ -5,11 +5,13 @@ import engine from "../engine/index.js";
 // user stuff
 import Brain from "./objects/brain.js";
 import Hero from "./objects/hero.js";
+import Box from "./objects/box.js"
 import Minion from "./objects/minion.js";
 import TextureObject from "./objects/texture_object.js";
 import Projectile from "../engine/game_objects/projectile.js"
 import TrailRenderable from "../engine/renderables/trail_renderable.js";
 import TextureRenderable from "../engine/renderables/texture_renderable_main.js";
+import FontRenderable from "../engine/renderables/font_renderable.js";
 // import { vec2 } from "../lib/gl-matrix.js";
 // import { vec2 } from "../lib/gl-matrix.js";
 
@@ -22,6 +24,7 @@ class MyGame extends engine.Scene {
         this.kBeam2 = "assets/second_beam.png";
         this.kT = "assets/projectile-png-7.png";
         this.kBg = "assets/bg.png";
+        this.kBarrier = "assets/box.png";
 
         // The camera to view the scene
         this.mCamera = null;
@@ -44,6 +47,7 @@ class MyGame extends engine.Scene {
         engine.texture.load(this.kMinionSprite);
         engine.texture.load(this.kMinionPortal);
         engine.texture.load(this.kBg);
+        engine.texture.load(this.kBarrier);
     }
 
     unload() {
@@ -53,6 +57,7 @@ class MyGame extends engine.Scene {
         engine.texture.unload(this.kMinionSprite);
         engine.texture.unload(this.kMinionPortal);
         engine.texture.unload(this.kBg);
+        engine.texture.unload(this.kBarrier);
     }
 
     init() {
@@ -75,19 +80,32 @@ class MyGame extends engine.Scene {
 
         // Objects in the scene
         this.mHero = new Hero(this.kMinionSprite);
+        this.mBarrier = new Box(this.kBarrier);
+
+
         this.mPortal = new TextureObject(this.kMinionPortal, 50, 20, 10, 10);
 
         this.mProjectileT = new Projectile(this.kBeam2, Infinity, this.kT, 500, 10);
         this.mProjectileT.getXform().setSize(5, 4);
         this.mProjectileT.setTrailSize(2, 1);
         this.mProjectileT.getXform().setPosition(20, 20);
-        this.mProjectileT.setTracking(this.mPortal, 11, 1, 0)
+        this.mProjectileT.setTracking(this.mBarrier, 11, 1, 0);
+
+
+
+        this.mProjectileT2 = new Projectile(this.kBeam2, Infinity, this.kT, 500, 10);
+        this.mProjectileT2.getXform().setSize(5, 4);
+        this.mProjectileT2.setTrailSize(2, 1);
+        this.mProjectileT2.getXform().setPosition(40, 10);
+        this.mProjectileT2.setTracking(vec2.fromValues(30,30), 11, 1, 0);
 
         this.mProjectileP = new Projectile(this.kBeam, Infinity, this.kT, 500, 10);
         this.mProjectileP.getXform().setSize(5, 4);
         this.mProjectileP.setTrailSize(2, 1);
         this.mProjectileP.getXform().setPosition(40, 40);
         this.mProjectileP.setParabolaD(vec2.fromValues(1, 1), 0.15);
+
+        this.mTextRenderable = new FontRenderable("Location = " + engine.input.getMousePosX() + " " + engine.input.getMousePosY());
     }
 
     _drawCamera(camera) {
@@ -106,6 +124,9 @@ class MyGame extends engine.Scene {
         // Step  B: Draw with all three cameras
         this._drawCamera(this.mCamera);
 
+        
+        this.mBarrier.draw(this.mCamera);
+
         // draw all projectiles
         Projectile.drawAllProjectiles(this.mCamera)
 
@@ -123,7 +144,7 @@ class MyGame extends engine.Scene {
     }
 
     // The update function, updates the application state. Make sure to _NOT_ draw
-    // anything from this function!
+    // anything from this function! 
     update() {
         this.mCamera.update();  // for smoother camera movements
         
@@ -132,7 +153,9 @@ class MyGame extends engine.Scene {
             this.mProjectile = new Projectile(this.kBeam, 1000, this.kT, 250 , 100);
             this.mProjectile.getXform().setSize(5, 4);
             this.mProjectile.getXform().setPosition(this.mHero.getXform().getXPos() + this.mHero.getXform().getWidth()/2, this.mHero.getXform().getYPos() + this.mHero.getXform().getHeight()/3.8);
-            this.mProjectile.setStraight(null , null, Math.random() * Math.PI * 2, 0.3, 0.01)
+            this.mProjectile.setStraight(null , null, 0/*Math.random() * Math.PI * 2*/, 0.3, 0.01)
+
+            this.mProjectile.setBouncingPrototypes([Box]);
             this.mProjectileSet.push(this.mProjectile);
         }
         /*
@@ -142,7 +165,9 @@ class MyGame extends engine.Scene {
             }
         }
         */
-        Projectile.updateAllProjectiles()
+        Projectile.updateAllProjectiles();
+
+        // this.mBarrier.update();
 
 
         // TEST

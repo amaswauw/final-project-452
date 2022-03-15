@@ -40,12 +40,22 @@ class Hero extends engine.GameObject {
 
         // rotation by A and D
         if (engine.input.isKeyPressed(engine.input.keys.A)) {
-            let rot = vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), this.kDelta);
-            xform.incRotationByRad(this.kDelta);
+            if (engine.input.isKeyPressed(engine.input.keys.Shift))  {
+                vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), 2 * this.kDelta);
+                xform.incRotationByRad(2 * this.kDelta);
+            }   else    {
+                vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), this.kDelta);
+                xform.incRotationByRad(this.kDelta);
+            }
         }
         if (engine.input.isKeyPressed(engine.input.keys.D)) {
-            vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), -this.kDelta);
-            xform.incRotationByRad(-this.kDelta);
+            if (engine.input.isKeyPressed(engine.input.keys.Shift))  {
+                vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), 2 * -this.kDelta);
+                xform.incRotationByRad(2 * -this.kDelta);
+            }   else    {
+                vec2.rotate(this.getCurrentFrontDir(), this.getCurrentFrontDir(), -this.kDelta);
+                xform.incRotationByRad(-this.kDelta);
+            }
         }
     }
 }

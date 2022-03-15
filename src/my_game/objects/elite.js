@@ -3,7 +3,7 @@
 import engine from "../../engine/index.js";
 import Missile from "./missile.js";
 
-class Enemy extends engine.GameObject {
+class Elite extends engine.GameObject {
     constructor(texture, cam) {
         super(null);
         this.kDelta = 0.2;
@@ -12,7 +12,7 @@ class Enemy extends engine.GameObject {
         this.timer = 5000 + Math.random() * 1000;
         this.mValid = true;
 
-        this.interval = 3000;
+        this.interval = 5000;
         this.lastLaunch = performance.now();
 
         this.mRenderComponent = new engine.TextureRenderable(texture);
@@ -24,7 +24,6 @@ class Enemy extends engine.GameObject {
         let x = Math.random() * 150 + 25;
         let y = Math.random() * 25 + 115;
         this.mRenderComponent.getXform().setPosition(x, y);
-        this.mCreateTime = performance.now()
     }
 
     launchMissile() {
@@ -33,8 +32,9 @@ class Enemy extends engine.GameObject {
             this.lastLaunch = performance.now();
             return true;
         }
+
     }
 
 }
 
-export default Enemy;
+export default Elite;

@@ -76,6 +76,8 @@ let mKeyPreviousState = []; // a new array
 let  mIsKeyPressed = [];
 // Click events: once an event is set, it will remain there until polled
 let  mIsKeyClicked = [];
+// The key release event.
+let mIsKeyReleased = [];
 
 // Event handler functions
 function onKeyDown(event) {
@@ -131,6 +133,7 @@ function init(canvasID) {
         mIsKeyPressed[i] = false;
         mKeyPreviousState[i] = false;
         mIsKeyClicked[i] = false;
+        mIsKeyReleased[i] = false;
     }
 
     // register handlers 
@@ -154,6 +157,7 @@ function update() {
     // update keyboard input state
     for (i = 0; i < keys.LastKeyCode; i++) {
         mIsKeyClicked[i] = (!mKeyPreviousState[i]) && mIsKeyPressed[i];
+        mIsKeyReleased[i] = (!mIsKeyPressed[i] && mKeyPreviousState[i]);
         mKeyPreviousState[i] = mIsKeyPressed[i];
     }
 
@@ -184,13 +188,17 @@ function isButtonClicked(button) {
 function getMousePosX() { return mMousePosX; }
 function getMousePosY() { return mMousePosY; }
 
+function isKeyReleased(keyCode) {
+    return mIsKeyReleased[keyCode];
+}
+
 export {
     keys, eMouseButton,
     
     init, cleanUp, update, 
 
     // keyboard
-    isKeyClicked, isKeyPressed,
+    isKeyClicked, isKeyPressed, isKeyReleased,
 
     // mouse
     isButtonClicked, isButtonPressed, getMousePosX, getMousePosY

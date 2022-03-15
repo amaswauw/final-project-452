@@ -23,14 +23,22 @@ class Transform {
     setYPos(yPos) { this.mPosition[1] = yPos; }
     incYPosBy(delta) { this.mPosition[1] += delta; }
 
+    getCorners() {
+        let corners = [];
+        let lowerLeft = vec2.fromValues(this.getPosition()[0], this.getPosition()[1]);
+        lowerLeft[0] -= this.getWidth()/2;
+        lowerLeft[1] -= this.getHeight()/2;
 
-    getCenterPos(){
-        return vec2.fromValues(this.mPosition[0] + this.mScale[0]/2,this.mPosition[1] + this.mScale[1]/2);
-    }
+        let upperLeft = vec2.fromValues(lowerLeft[0], lowerLeft[1] + this.getHeight());
+        let upperRight = vec2.fromValues(lowerLeft[0] + this.getWidth(), upperLeft[1]);
+        let lowerRight = vec2.fromValues(upperRight[0], lowerLeft[1]);
 
+        corners.push(lowerLeft);
+        corners.push(upperLeft);
+        corners.push(upperRight);
+        corners.push(lowerRight);
 
-    getFrontMiddle(){
-        return vec2.fromValues(this.mPosition[0]+this.mScale[0], this.mPosition[1] + this.mScale[1]/2);
+        return corners;
     }
     
     setSize(width, height) {
